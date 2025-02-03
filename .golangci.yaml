@@ -1,0 +1,56 @@
+run:
+  allow-parallel-runners: true
+
+linters:
+  enable:
+    - asasalint
+    - dupl
+    - durationcheck
+    - forbidigo
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - gofmt
+    - lll
+    - revive
+    - varnamelen
+
+linters-settings:
+  forbidigo:
+    exclude_godoc_examples: true
+  funlen:
+    lines: 200
+    statements: 160
+  goconst:
+    min-len: 5
+  lll:
+    line-length: 100
+    tab-width: 8
+  revive:
+    rules:
+      - name: redefines-builtin-id
+        disabled: true
+  varnamelen:
+    max-distance: 20
+    min-name-length: 2
+    ignore-type-assert-ok: true
+    ignore-map-index-ok: true
+    ignore-chan-recv-ok: true
+    ignore-decls:
+      - c *gin.Context
+      - t testing.T
+      - f *foo.Bar
+      - i int
+      - T any
+      - m map[string]int
+      - m map[string]string
+      - m map[string]interface{}
+
+issues:
+  exclude-rules:
+    - linters: [revive]
+      text: "(dot imports|exported .* returns unexported type)"
+    - linters: [govet]
+      text: "printf: non-constant format string in call to"
+      source: 'errors\.[^(]+\('
