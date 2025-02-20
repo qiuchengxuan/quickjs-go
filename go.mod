@@ -1,6 +1,8 @@
 module github.com/qiuchengxuan/go-quickjs
 
-go 1.22.9
+go 1.23.0
+
+toolchain go1.23.5
 
 require github.com/stretchr/testify v1.10.0
 

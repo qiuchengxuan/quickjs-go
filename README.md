@@ -39,3 +39,59 @@ func main() {
     })
 }
 ```
+
+Set property to JS object
+-------------------------
+
+When setting properties to JS objects, values are converted as following:
+
+| Go Value                  | JS Value    |
+|---------------------------|-------------|
+| nil                       | null        |
+| Undefined                 | undefined   |
+| bool                      | boolean     |
+| (u)int(*)/float32/float64 | Number      |
+| big.Int                   | bigint      |
+| string                    | string      |
+| []uint8                   | Uint8Array  |
+| []uint16                  | Uint16Array |
+| []uint32                  | Uint32Array |
+| []int8                    | Int8Array   |
+| []int16                   | Int16Array  |
+| []int32                   | Int32Array  |
+| []any or map[string]any   | object      |
+| map[\*]\*                 | Map         |
+| []\*                      | Array       |
+| *                         | undefined   |
+
+Convert to native value from JS
+-------------------------------
+
+Value returned by `Eval` or `GetProperty` can be further exported as
+Go representation with `ToPrimitive` or `ToNative`.
+
+Value converted as following:
+
+| JS Value     | Go Value                |
+|--------------|-------------------------|
+| null         | nil                     |
+| undefined    | Undefined               |
+| boolean      | bool                    |
+| Number       | int or float64          |
+| bigint       | int or big.Int          |
+| string       | string                  |
+| object       | []any or map[string]any |
+| Array        | []any                   |
+| ArrayBuffer  | []byte                  |
+| Uint8Array   | []uint8                 |
+| Uint16Array  | []uint16                |
+| Uint32Array  | []uint32                |
+| Int8Array    | []int8                  |
+| Int16Array   | []int16                 |
+| Int32Array   | []int32                 |
+| Float32Array | []float32               |
+| Float64Array | []float64               |
+| Map          | map[any]any             |
+| Set          | []any                   |
+| Date         | time.Time               |
+| *            | NotNative               |

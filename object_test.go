@@ -94,9 +94,9 @@ func TestCallGoFunction(t *testing.T) {
 	NewRuntime().NewContext().With(func(context *Context) {
 		object := context.GlobalObject()
 		counter := 0
-		naiveFunc := func(args ...any) any {
+		naiveFunc := func(args ...any) (any, error) {
 			counter = len(args)
-			return args[0].(int) + args[1].(int)
+			return args[0].(int) + args[1].(int), nil
 		}
 		object.SetProperty("test", naiveFunc)
 		retval, err := context.Eval("test(1, 2);")

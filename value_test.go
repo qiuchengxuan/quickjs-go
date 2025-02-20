@@ -15,7 +15,7 @@ func TestToNative(t *testing.T) {
 	NewRuntime().NewContext().With(func(context *Context) {
 		jsValue, err := context.GlobalObject().GetProperty("nonExist")
 		assert.NoError(t, err)
-		assert.Equal(t, nil, jsValue.ToNative())
+		assert.Equal(t, Undefined, jsValue.ToNative())
 
 		jsValue, err = context.Eval("null")
 		assert.NoError(t, err)
@@ -71,13 +71,14 @@ func TestToNative(t *testing.T) {
 
 func TestFromNative(t *testing.T) {
 	NewRuntime().NewContext().With(func(context *Context) {
-		context.GlobalObject().SetProperty("testValue", nil)
+		global := context.GlobalObject()
+		global.SetProperty("testValue", nil)
 		retval, err := context.Eval("testValue == null")
 		assert.NoError(t, err)
 		assert.True(t, retval.ToNative().(bool))
 
-		context.GlobalObject().SetProperty("testValue", true)
-		property, err := context.GlobalObject().GetProperty("testValue")
+		global.SetProperty("testValue", true)
+		property, err := global.GetProperty("testValue")
 		assert.NoError(t, err)
 		assert.True(t, property.ToNative().(bool))
 
@@ -86,11 +87,18 @@ func TestFromNative(t *testing.T) {
 			uint(1), uint8(1), uint16(1), uint32(1), uint64(1),
 		}
 		for _, value := range integers {
-			context.GlobalObject().SetProperty("testValue", value)
-			property, err := context.GlobalObject().GetProperty("testValue")
+			global.SetProperty("testValue", value)
+			property, err := global.GetProperty("testValue")
 			assert.NoError(t, err)
 			assert.Equal(t, 1, property.ToNative())
 		}
+
+		bigNumber := big.NewInt(math.MaxInt64)
+		bigNumber.Add(bigNumber, bigNumber)
+		global.SetProperty("bigNumber", bigNumber)
+		property, err = global.GetProperty("bigNumber")
+		assert.NoError(t, err)
+		assert.Equal(t, *bigNumber, property.ToNative())
 
 		numbers := []any{
 			math.MaxUint32, int64(math.MaxUint32),
@@ -98,14 +106,14 @@ func TestFromNative(t *testing.T) {
 			float64(math.MaxUint32),
 		}
 		for _, value := range numbers {
-			context.GlobalObject().SetProperty("testValue", value)
-			property, err := context.GlobalObject().GetProperty("testValue")
+			global.SetProperty("testValue", value)
+			property, err := global.GetProperty("testValue")
 			assert.NoError(t, err)
 			assert.Equal(t, float64(math.MaxUint32), property.ToNative())
 		}
 
-		context.GlobalObject().SetProperty("testValue", float32(1.1))
-		property, err = context.GlobalObject().GetProperty("testValue")
+		global.SetProperty("testValue", float32(1.1))
+		property, err = global.GetProperty("testValue")
 		assert.NoError(t, err)
 		assert.Equal(t, float64(float32(1.1)), property.ToNative())
 	})
@@ -131,6 +139,15 @@ func TestJSON(t *testing.T) {
 		value, err = global.GetProperty("jsonValue")
 		assert.NoError(t, err)
 		assert.Equal(t, expected, value.JSONify())
+	})
+}
+
+func TestUndefined(t *testing.T) {
+	NewRuntime().NewContext().With(func(context *Context) {
+		context.GlobalObject().SetProperty("whatever", Undefined)
+		value, _ := context.Eval("whatever")
+		assert.NotEqual(t, nil, value.ToNative())
+		assert.Equal(t, Undefined, value.ToNative())
 	})
 }
 

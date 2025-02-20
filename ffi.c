@@ -7,4 +7,6 @@ JSClassDef go_object_class = {
     .call = proxyCall,
 };
 
-JSValue ThrowTypeError(JSContext *ctx, const char *fmt) { return JS_ThrowTypeError(ctx, "%s", fmt); }
+JSValue ThrowInternalError(JSContext *ctx, const char *fmt) {
+    return JS_ThrowInternalError(ctx, "%s", fmt);
+}

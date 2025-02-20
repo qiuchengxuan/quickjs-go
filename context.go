@@ -18,32 +18,6 @@ type Context struct {
 	free        atomic.Bool
 }
 
-func (c *Context) getException() error {
-	value := Value{c, C.JS_GetException(c.raw)}
-	cause := value.String()
-	stack, _ := value.Object().GetProperty("stack")
-	if stack.Type() == TypeUndefined {
-		return &Error{Cause: cause}
-	}
-	err := &Error{Cause: cause, Stack: stack.String()}
-	C.JS_FreeValue(c.raw, value.raw)
-	return err
-}
-
-func (c *Context) checkException(value C.JSValue) error {
-	if C.JS_IsException(value) == 1 {
-		return c.getException()
-	}
-	return nil
-}
-
-func (c *Context) assert(value C.JSValue) C.JSValue {
-	if err := c.checkException(value); err != nil {
-		panic(err)
-	}
-	return value
-}
-
 func (c *Context) addGoObject(value any) C.JSValue {
 	jsObject := C.JS_NewObjectClass(c.raw, C.int(c.runtime.goObject))
 	c.goValues[(uintptr)(C.JS_ValuePtr(jsObject))] = value
@@ -60,7 +34,11 @@ func (c *Context) addNaiveFunc(fn NaiveFunc) C.JSValue {
 		for i, arg := range args {
 			goArgs[i] = Value{c, arg}.ToNative()
 		}
-		return c.toJsValue(fn(goArgs...))
+		retval, err := fn(goArgs...)
+		if err != nil {
+			return c.ThrowInternalError("%s", err)
+		}
+		return c.toJsValue(retval)
 	}
 	return c.addGoObject(callback)
 }

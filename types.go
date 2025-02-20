@@ -6,7 +6,11 @@ type ByteCode []byte
 
 type NotNative struct{}
 
-type NaiveFunc = func(...any) any
+type undefined struct{}
+
+var Undefined *undefined = nil
+
+type NaiveFunc = func(...any) (any, error)
 
 type JSONValue interface {
 	json.Marshaler

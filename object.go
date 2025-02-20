@@ -165,6 +165,7 @@ func (o Object) setProperty(name string, value C.JSValue) {
 // []byte will be converted to Uint8Array since []byte and []uint8 is the same
 // []any and map[string]any will be converted to plain object
 // Any form of map will be converted to Map
+// If you want add function to global object, wrap as NaiveFunc for better performance
 func (o Object) SetProperty(name string, value any) {
 	o.setProperty(name, o.context.toJsValue(value))
 }

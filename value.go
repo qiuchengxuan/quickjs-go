@@ -103,8 +103,10 @@ func (v Value) JSONify() string {
 // Map will be converted to map[any]any
 func (v Value) ToNative() any {
 	switch v.Type() {
-	case TypeNull, TypeUndefined:
+	case TypeNull:
 		return nil
+	case TypeUndefined:
+		return Undefined
 	case TypeBool:
 		return C.JS_ToBool(v.context.raw, v.raw) == 1
 	case TypeNumber:

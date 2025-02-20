@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"math"
+	"math/big"
 	"reflect"
 	"unsafe"
 )
@@ -50,6 +51,14 @@ func (c *Context) toJsValue(value any) C.JSValue {
 		return C.JS_NewFloat64(c.raw, C.double(value))
 	case float64:
 		return C.JS_NewFloat64(c.raw, C.double(value))
+	case *big.Int:
+		return c.toJsValue(*value)
+	case big.Int:
+		arg := C.JS_NewString(c.raw, strPtr(value.String()+"\x00"))
+		bigInt, _ := c.GlobalObject().GetProperty("BigInt")
+		retval := bigInt.Object().call(null, 1, &arg)
+		C.JS_FreeValue(c.raw, arg)
+		return retval
 	case string:
 		newStr := value + "\x00"
 		return C.JS_NewString(c.raw, strPtr(newStr))
@@ -93,6 +102,12 @@ func (c *Context) toJsValue(value any) C.JSValue {
 		dataPtr := (*C.char)(unsafe.Pointer(&data[0]))
 		return C.JS_ParseJSON(c.raw, dataPtr, sliceSize(data)-1, nil)
 	default:
+		if value == Undefined {
+			return C.JS_Undefined()
+		}
+		if value == nil {
+			return null
+		}
 		valueOf := reflect.ValueOf(value)
 		switch valueOf.Kind() {
 		case reflect.Map:
@@ -107,8 +122,14 @@ func (c *Context) toJsValue(value any) C.JSValue {
 			jsMap := C.JS_CallConstructor(c.raw, class.raw, 1, &jsValue)
 			C.JS_FreeValue(c.raw, jsValue)
 			return jsMap
+		case reflect.Array, reflect.Slice:
+			array := Value{c, C.JS_NewArray(c.raw)}.Object().Array()
+			for i := 0; i < valueOf.Len(); i++ {
+				array.Set(i, valueOf.Index(i).Interface())
+			}
+			return array.raw
 		default:
-			return null
+			return C.JS_Undefined()
 		}
 	}
 }
